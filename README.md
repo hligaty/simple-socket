@@ -239,6 +239,7 @@ Handle finished with exit code 0
 
 - 处理消息抛出 RuntimeException 不会断开连接，但 LoginException 和 AutoWriteException 除外。
 - 处理登入和登出消息抛出的异常不会被 AbstractLogoutMessageHandler#exceptionLogout(Exception, Message) 处理
+- 承载发送和接收消息体的 byte 数组总是 new 出来而不是池化的？我觉得堆内还是靠 GC 处理的好，堆外内存（这种耗费时间的资源分配）的池化才有必要，而且 BIO 也不适用与大量连接。
 
 # 未来
 
