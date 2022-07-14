@@ -19,7 +19,7 @@ public abstract class AbstractMessageHandler implements SpecialMessageHandler {
     /**
      * Enhanced messaging.
      *
-     * @param message           message
+     * @param message   message
      * @param session           client
      * @param writeCallback     write successful callback
      * @param exceptionCallback failed callback
@@ -40,7 +40,7 @@ public abstract class AbstractMessageHandler implements SpecialMessageHandler {
     /**
      * Async enhanced messaging.
      *
-     * @param message           message
+     * @param message   message
      * @param session           client
      * @param writeCallback     write successful callback
      * @param exceptionCallback failed callback

@@ -3,6 +3,8 @@ package io.github.hligaty.util;
 import io.github.hligaty.exception.ReceiveException;
 import io.github.hligaty.exception.SendException;
 import io.github.hligaty.message.Message;
+import io.github.hligaty.message.DefaultMessage;
+import io.github.hligaty.message.SenderMessage;
 
 import java.io.*;
 import java.net.Socket;
@@ -45,7 +47,7 @@ public final class Session implements Closeable {
         this.inputStream = new BufferedInputStream(socket.getInputStream());
     }
 
-    public Message receive() throws ReceiveException {
+    public DefaultMessage receive() throws ReceiveException {
         readBuffer.clear();
         int total;
         try {
@@ -58,7 +60,7 @@ public final class Session implements Closeable {
             int size = readBuffer.getInt() - 4;
             int code = readBuffer.getInt();
             if (size <= 0) {
-                return new Message(code);
+                return new DefaultMessage(code);
             }
             ByteBuffer tempBuffer = ByteBuffer.allocate(size);
             if ((total = inputStream.read(tempBuffer.array(), 0, size)) != size) {
@@ -67,7 +69,7 @@ public final class Session implements Closeable {
                 }
                 throw new ReceiveException("bad message format");
             }
-            return new Message(code, tempBuffer);
+            return new DefaultMessage(code, tempBuffer);
         } catch (IOException e) {
             if (e instanceof ReceiveException) {
                 throw (ReceiveException) e;
@@ -79,16 +81,28 @@ public final class Session implements Closeable {
     public void send(Message message) throws SendException {
         synchronized (outputStream) {
             try {
-                writeBuffer.clear();
-                writeBuffer.putInt(message.getByteBuffer().array().length + 4)
-                                .putInt(message.getCode());
-                outputStream.write(writeBuffer.array());
-                outputStream.write(message.getByteBuffer().array());
-                outputStream.flush();
+                if (message instanceof SenderMessage) {
+                    SenderMessage senderMessage = (SenderMessage) message;
+                    outputStream.write(buildTL(senderMessage).array());
+                    senderMessage.getSender().send(outputStream);
+                } else {
+                    DefaultMessage defaultMessage = (DefaultMessage) message;
+                    outputStream.write(buildTL(defaultMessage).array());
+                    outputStream.write(defaultMessage.getByteBuffer().array());
+                    outputStream.flush();
+                }
             } catch (IOException e) {
                 throw new SendException("I/O error", e, message);
             }
         }
+    }
+
+    private ByteBuffer buildTL(Message message) {
+        writeBuffer.clear();
+        writeBuffer.putInt(message instanceof SenderMessage ?
+                ((SenderMessage) message).getBodySize() + 4:
+                ((DefaultMessage) message).getByteBuffer().array().length + 4);
+        return writeBuffer.putInt(message.getCode());
     }
 
     public boolean isLogouted() {

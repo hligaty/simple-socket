@@ -3,7 +3,7 @@ package io.github.hligaty.handler;
 import io.github.hligaty.Server;
 import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.SendException;
-import io.github.hligaty.message.Message;
+import io.github.hligaty.message.DefaultMessage;
 
 import java.nio.ByteBuffer;
 
@@ -19,11 +19,11 @@ public interface AutoSendCapableMessageHandler extends MessageHandler {
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */
-    Message doHandleAndWrite(ByteBuffer byteBuffer);
+    DefaultMessage doHandleAndWrite(ByteBuffer byteBuffer);
 
     @Override
     default void doHandle(ByteBuffer byteBuffer) {
-        Message message = null;
+        DefaultMessage message = null;
         try {
             message = doHandleAndWrite(byteBuffer);
             Server.getCurrentSession().send(message);

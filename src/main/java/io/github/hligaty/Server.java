@@ -4,7 +4,7 @@ import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
 import io.github.hligaty.exception.SimpleSocketIOException;
 import io.github.hligaty.handler.*;
-import io.github.hligaty.message.Message;
+import io.github.hligaty.message.DefaultMessage;
 import io.github.hligaty.util.NamedThreadFactory;
 import io.github.hligaty.util.Session;
 import io.github.hligaty.util.ThreadPerTaskExecutor;
@@ -75,7 +75,7 @@ public class Server implements Closeable {
                         Session session = new Session(serverSocket.accept(), timeout);
                         readerGroup.execute(() -> {
                             sessionThreadLocal.set(session);
-                            Message message = null;
+                            DefaultMessage message = null;
                             try {
                                 // Is a login message or has logged in
                                 while (!session.isLogouted() && (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getId() != null)) {

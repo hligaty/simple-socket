@@ -47,7 +47,7 @@ public interface MessageHandler {
 package io.github.hligaty.common.handler;
 
 import io.github.hligaty.handler.MessageHandler;
-import io.github.hligaty.message.Message;
+import io.github.hligaty.message.AbstractMessagetMessage;
 
 import java.nio.ByteBuffer;
 
@@ -63,7 +63,7 @@ public interface AutoWriteCapableMessageHandler extends MessageHandler {
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */
-    Message doHandlesAndWrite(ByteBuffer byteBuffer);
+    AbstractMessage doHandlesAndWrite(ByteBuffer byteBuffer);
 
     //...
 }
@@ -71,7 +71,7 @@ public interface AutoWriteCapableMessageHandler extends MessageHandler {
 
 ### 手动回复消息
 
-手动发送消息可以在消息处理时使用  Server.getCurrentSession() 方法获取 Session，然后调用它的 write() 方法，方法会抛出 WriteException。
+手动发送消息可以在消息处理时使用  Server.getCurrentSession() 方法获取 Session，然后调用它的 send() 方法，方法会抛出 WriteException。
 
 ### 广播消息
 
@@ -237,9 +237,9 @@ Handle finished with exit code 0
 
 # 其他
 
-- 处理消息抛出 RuntimeException 不会断开连接，但 LoginException 和 AutoWriteException 除外。
-- 处理登入和登出消息抛出的异常不会被 AbstractLogoutMessageHandler#exceptionLogout(Exception, Message) 处理
-- 承载发送和接收消息体的 byte 数组总是 new 出来而不是池化的？我觉得堆内还是靠 GC 处理的好，堆外内存（这种耗费时间的资源分配）的池化才有必要，而且 BIO 也不适用与大量连接。
+- 处理消息抛出 RuntimeException 不会断开连接，就像 SpringMVC 一样，处理请求出现异常一般是不会使 Tomcat 停止。注意：登入异常 LoginException 和 回复消息发送异常 AutoWriteException 除外。
+- 消息有两种实现，默认的 DefaultMessage 的消息体是通过传入 byte 数组设置的，而 SenderMessage 提供 OutputStream 写入的，这个流是线程安全的。
+- 处理登入和登出消息抛出的异常不会被 AbstractLogoutMessageHandler#exceptionLogout(Exception, Message) 处理。
 
 # 未来
 

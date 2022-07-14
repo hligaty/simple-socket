@@ -5,6 +5,7 @@ import io.github.hligaty.cache.GroupCache;
 import io.github.hligaty.demo.MessageCode;
 import io.github.hligaty.handler.AbstractLogoutMessageHandler;
 import io.github.hligaty.message.Message;
+import io.github.hligaty.message.DefaultMessage;
 import io.github.hligaty.util.Session;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +27,7 @@ public class LogoutMessageHandler extends AbstractLogoutMessageHandler {
     public void logout(ByteBuffer byteBuffer) {
         Session currentSession = Server.getCurrentSession();
         log.info("{} logout", currentSession.getId());
-        Message message = new Message(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        Message message = new DefaultMessage(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
         super.broadcast(message, session -> !Objects.equals(currentSession.getId(), session.getId()), null, null);
         super.asyncBroadcast(message, GroupCache.getGroup(GROUP_ONE), null, null);
     }
