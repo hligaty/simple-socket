@@ -241,6 +241,10 @@ Handle finished with exit code 0
 - 处理登入和登出消息抛出的异常不会被 AbstractLogoutMessageHandler#exceptionLogout(Exception, Message) 处理
 - 承载发送和接收消息体的 byte 数组总是 new 出来而不是池化的？我觉得堆内还是靠 GC 处理的好，堆外内存（这种耗费时间的资源分配）的池化才有必要，而且 BIO 也不适用与大量连接。
 
+## 推荐
+
+- [NIO 非阻塞服务器](https://jenkov.com/tutorials/java-nio/non-blocking-server.html)
+
 # 未来
 
 - 完善 readme
