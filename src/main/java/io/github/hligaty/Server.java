@@ -4,7 +4,7 @@ import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
 import io.github.hligaty.exception.SimpleSocketIOException;
 import io.github.hligaty.handler.*;
-import io.github.hligaty.message.DefaultMessage;
+import io.github.hligaty.message.ByteMessage;
 import io.github.hligaty.util.NamedThreadFactory;
 import io.github.hligaty.util.Session;
 import io.github.hligaty.util.ThreadPerTaskExecutor;
@@ -60,8 +60,9 @@ public class Server implements Closeable {
         runState = new CountDownLatch(nThreads);
         bossGroup = new ThreadPerTaskExecutor(new NamedThreadFactory("bossGroup-"));
         readerGroup = new ThreadPerTaskExecutor(new NamedThreadFactory("readerGroup-"));
-        writerGroup = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), Runtime.getRuntime().availableProcessors(), 0, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1024), new NamedThreadFactory("writerGroup-"), new ThreadPoolExecutor.CallerRunsPolicy());
+        int writeThreads = (Runtime.getRuntime().availableProcessors() >> 1) + 1;
+        writerGroup = new ThreadPoolExecutor(writeThreads, writeThreads, 0, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(102400), new NamedThreadFactory("writerGroup-"), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     /**
@@ -72,11 +73,12 @@ public class Server implements Closeable {
             bossGroup.execute(() -> {
                 while (isRunning()) {
                     try {
-                        Session session = new Session(serverSocket.accept(), timeout);
+                        Session session = new Session(serverSocket.accept());
                         readerGroup.execute(() -> {
                             sessionThreadLocal.set(session);
-                            DefaultMessage message = null;
+                            ByteMessage message = null;
                             try {
+                                session.setTimeout(timeout);
                                 // Is a login message or has logged in
                                 while (!session.isLogouted() && (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getId() != null)) {
                                     delegateMessageHandler.handleMessage(message);

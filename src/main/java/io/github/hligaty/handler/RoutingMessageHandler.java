@@ -2,7 +2,7 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
-import io.github.hligaty.message.DefaultMessage;
+import io.github.hligaty.message.ByteMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public final class RoutingMessageHandler implements MessageHandler {
         //
     }
 
-    public void handleMessage(DefaultMessage message) {
+    public void handleMessage(ByteMessage message) {
         try {
             messageHandlers.get(message.getCode()).doHandle(message.getByteBuffer());
         } catch (RuntimeException e) {

@@ -4,14 +4,17 @@ import io.github.hligaty.util.EmptyObjects;
 
 import java.nio.ByteBuffer;
 
-public class DefaultMessage extends Message {
+/**
+ * @author hligaty
+ */
+public class ByteMessage extends Message {
     private ByteBuffer byteBuffer;
 
-    public DefaultMessage(int code) {
+    public ByteMessage(int code) {
         super(code);
     }
 
-    public DefaultMessage(int code, ByteBuffer byteBuffer) {
+    public ByteMessage(int code, ByteBuffer byteBuffer) {
         super(code);
         this.byteBuffer = byteBuffer;
     }
