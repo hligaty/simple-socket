@@ -5,7 +5,7 @@ import io.github.hligaty.demo.handler.HeartBeatMessageHandler;
 import io.github.hligaty.demo.handler.LoginMessageHandler;
 import io.github.hligaty.demo.handler.LogoutMessageHandler;
 import io.github.hligaty.message.ByteMessage;
-import io.github.hligaty.util.Session;
+import io.github.hligaty.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -35,9 +35,9 @@ public class BIOServerTest {
                 try {
                     Session client = new Session(new Socket("localhost", 19630));
                     client.setId("root-" + i);
-                    client.send(new ByteMessage( MessageCode.LOGIN_REQ, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
+                    client.send(ByteMessage.sync( MessageCode.LOGIN_REQ, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
                     ByteMessage message = client.receive();
-                    client.send(new ByteMessage(MessageCode.HEART_BEAT, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
+                    client.send(ByteMessage.sync(MessageCode.HEART_BEAT, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
                     for (int i1 = 0; i1 < 500000; i1++) {
                         ByteMessage receive = client.receive();
                     }
@@ -46,7 +46,7 @@ public class BIOServerTest {
                         message = client.receive();
                         log.info("{} get {} logout", client.getId(), new String(message.getByteBuffer().array()));
                     }
-                    client.send(new ByteMessage(MessageCode.LOGOUT_REQ));
+                    client.send(ByteMessage.sync(MessageCode.LOGOUT_REQ));
                     // group_one(id < 3) get broadcast message
                     if (i < 3) {
                         message = client.receive();

@@ -1,4 +1,4 @@
-package io.github.hligaty.util;
+package io.github.hligaty.message;
 
 import java.io.IOException;
 import java.io.OutputStream;

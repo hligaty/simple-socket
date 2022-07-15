@@ -5,7 +5,7 @@ import io.github.hligaty.cache.GroupCache;
 import io.github.hligaty.demo.MessageCode;
 import io.github.hligaty.handler.AbstractLoginMessageHandler;
 import io.github.hligaty.message.ByteMessage;
-import io.github.hligaty.util.Session;
+import io.github.hligaty.Session;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,7 +26,7 @@ public class LoginMessageHandler extends AbstractLoginMessageHandler {
 
     @Override
     public Object login(ByteBuffer byteBuffer) {
-        ByteMessage message = new ByteMessage(MessageCode.LOGIN_RESP);
+        ByteMessage message = ByteMessage.sync(MessageCode.LOGIN_RESP);
         String id = new String(byteBuffer.array());
         Session session = Server.getCurrentSession();
         boolean hasLogin = false;

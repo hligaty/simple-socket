@@ -2,7 +2,7 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.Server;
 import io.github.hligaty.exception.LoginException;
-import io.github.hligaty.util.Session;
+import io.github.hligaty.Session;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;

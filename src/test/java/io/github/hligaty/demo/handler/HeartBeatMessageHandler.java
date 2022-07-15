@@ -1,12 +1,11 @@
 package io.github.hligaty.demo.handler;
 
 import io.github.hligaty.Server;
+import io.github.hligaty.Session;
 import io.github.hligaty.demo.MessageCode;
 import io.github.hligaty.exception.SendException;
 import io.github.hligaty.handler.MessageHandler;
-import io.github.hligaty.message.ByteMessage;
 import io.github.hligaty.message.Message;
-import io.github.hligaty.util.Session;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
@@ -47,14 +46,14 @@ public class HeartBeatMessageHandler implements MessageHandler {
         CountDownLatch countDownLatch = new CountDownLatch(num);
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(100);
         threadPoolExecutor.prestartAllCoreThreads();
-        //Message message = new StreamMessage();
-        Message message = new ByteMessage(0, ByteBuffer.wrap(bytes));
-
+        Message message;
+        message = buildMessage();
         for (int i = 0; i < num; i++) {
             threadPoolExecutor.execute(() -> {
+                //message = buildMessage();
                 try {
                     for (int i1 = 0; i1 < 1000; i1++) {
-                        session.send(message);
+                        session.asyncSend(message);
                     }
                 } catch (SendException e) {
                     log.error("failed to send 10000 big msg", e);
@@ -70,5 +69,18 @@ public class HeartBeatMessageHandler implements MessageHandler {
         }
         log.info("----------time:{}----------", System.currentTimeMillis() - start);
         log.info("heartbeat. {}", byteBuffer.getInt());
+    }
+
+    private Message buildMessage() {
+        //ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bytes.length);
+        //try {
+        //    outputStream.write(bytes);
+        //} catch (IOException ignored) {
+        //    return null;
+        //}
+        Message message = null;
+        //message = StreamMessage.async();
+        //message = ByteMessage.async();
+        return message;
     }
 }

@@ -2,11 +2,11 @@ package io.github.hligaty;
 
 import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
+import io.github.hligaty.exception.SendException;
 import io.github.hligaty.exception.SimpleSocketIOException;
 import io.github.hligaty.handler.*;
 import io.github.hligaty.message.ByteMessage;
 import io.github.hligaty.util.NamedThreadFactory;
-import io.github.hligaty.util.Session;
 import io.github.hligaty.util.ThreadPerTaskExecutor;
 
 import java.io.Closeable;
@@ -16,7 +16,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 
 /**
  * Socket Server
@@ -36,11 +39,7 @@ public class Server implements Closeable {
     /**
      * Handle read event
      */
-    private final Executor readerGroup;
-    /**
-     * Handle async write event
-     */
-    private final Executor writerGroup;
+    private final Executor workerGroup;
     private final RoutingMessageHandler delegateMessageHandler = new RoutingMessageHandler();
     private AbstractLoginMessageHandler loginMessageHandler;
     private AbstractLogoutMessageHandler logoutMessageHandler;
@@ -59,10 +58,7 @@ public class Server implements Closeable {
         this.timeout = timeout;
         runState = new CountDownLatch(nThreads);
         bossGroup = new ThreadPerTaskExecutor(new NamedThreadFactory("bossGroup-"));
-        readerGroup = new ThreadPerTaskExecutor(new NamedThreadFactory("readerGroup-"));
-        int writeThreads = (Runtime.getRuntime().availableProcessors() >> 1) + 1;
-        writerGroup = new ThreadPoolExecutor(writeThreads, writeThreads, 0, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(102400), new NamedThreadFactory("writerGroup-"), new ThreadPoolExecutor.CallerRunsPolicy());
+        workerGroup = new ThreadPerTaskExecutor(new NamedThreadFactory("readerGroup-"));
     }
 
     /**
@@ -74,29 +70,14 @@ public class Server implements Closeable {
                 while (isRunning()) {
                     try {
                         Session session = new Session(serverSocket.accept());
-                        readerGroup.execute(() -> {
-                            sessionThreadLocal.set(session);
-                            ByteMessage message = null;
-                            try {
-                                session.setTimeout(timeout);
-                                // Is a login message or has logged in
-                                while (!session.isLogouted() && (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getId() != null)) {
-                                    delegateMessageHandler.handleMessage(message);
-                                }
-                            } catch (SimpleSocketIOException | AutoSendException e) {
-                                logoutMessageHandler.exceptionCaught(e, message);
-                            } catch (LoginException ignored) {
-                            } finally {
-                                session.close();
-                                sessionThreadLocal.remove();
-                            }
-                        });
+                        workerGroup.execute(() -> handleMessage(session));
                     } catch (Exception ignored) {
                     }
                 }
                 runState.countDown();
             });
         }
+        flushSendBuffer();
         return this;
     }
 
@@ -107,6 +88,47 @@ public class Server implements Closeable {
      */
     public boolean isRunning() {
         return runState != null && runState.getCount() > 0;
+    }
+
+    private void handleMessage(Session session) {
+        sessionThreadLocal.set(session);
+        ByteMessage message = null;
+        try {
+            session.setTimeout(timeout);
+            // Is a login message or has logged in
+            while (!session.isLogouted() && (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getId() != null)) {
+                delegateMessageHandler.handleMessage(message);
+            }
+        } catch (SimpleSocketIOException | AutoSendException e) {
+            logoutMessageHandler.exceptionCaught(e, message);
+        } catch (LoginException ignored) {
+        } finally {
+            session.close();
+            sessionThreadLocal.remove();
+        }
+    }
+
+    private void flushSendBuffer() {
+        workerGroup.execute(() -> {
+            while (isRunning()) {
+                long start = System.currentTimeMillis();
+                onLineList.values().stream()
+                        .filter(Objects::nonNull)
+                        .map(WeakReference::get)
+                        .filter(Objects::nonNull)
+                        .forEach(session -> {
+                            try {
+                                session.send(null);
+                            } catch (SendException ignored) {
+                            }
+                        });
+                long sleepTime = start - System.currentTimeMillis() + 100;
+                try {
+                    Thread.sleep(sleepTime > 0 ? sleepTime : 0);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        });
     }
 
     /**
@@ -133,9 +155,6 @@ public class Server implements Closeable {
 
     private void prepareMessageHandler(MessageHandler messageHandler) {
         if (messageHandler instanceof SpecialMessageHandler) {
-            if (messageHandler instanceof AbstractMessageHandler) {
-                ((AbstractMessageHandler) messageHandler).setWriterGroup(writerGroup);
-            }
             if (messageHandler instanceof BroadcastCapableMessageHandler) {
                 // Add online list for broadcast-capable message Handler
                 ((BroadcastCapableMessageHandler) messageHandler).setOnLineList(onLineList);

@@ -13,7 +13,7 @@ simple-socket 实现了一个简单的 socket 服务，可以满足“客户端-
 实现 MessageHandler 类：bindCode() 方法的返回值是消息码； doHandle 方法处理消息，byteBuffer 是消息体。
 
 ```java
-package io.github.hligaty.common.handler;
+package io.github.hligaty.handler;
 
 import java.nio.ByteBuffer;
 
@@ -24,16 +24,16 @@ import java.nio.ByteBuffer;
  */
 public interface MessageHandler {
     /**
-     * Bind the message code that this message handler can process, cannot be repeated
+     * Bind the message code that this message handler can handle, cannot be repeated
      *
      * @return message code
      */
     int bindCode();
 
     /**
-     * The message processing is implemented here, and the message body needs to be parsed by you
-     *  @param byteBuffer message body
+     * The message handling is implemented here, and the message body needs to be parsed by you
      *
+     * @param byteBuffer message body
      */
     void doHandle(ByteBuffer byteBuffer);
 }
@@ -43,11 +43,15 @@ public interface MessageHandler {
 
 实现 AutoWriteCapableMessageHandler 类，doHandlesAndWrite() 方法和前面的 MessageHandler#doHandle(ByteBuffer) 不同的是有一个返回值，返回的是回复给客户端的消息。
 
-```java
-package io.github.hligaty.common.handler;
+Message 有两个实现，一个是 ByteMessage，一个是 StreamMessage，区别是前者通过 Byte 数组写入，后者直接提供 Socket 流，他是
 
-import io.github.hligaty.handler.MessageHandler;
-import io.github.hligaty.message.AbstractMessagetMessage;
+```java
+package io.github.hligaty.handler;
+
+import io.github.hligaty.Server;
+import io.github.hligaty.exception.AutoSendException;
+import io.github.hligaty.exception.SendException;
+import io.github.hligaty.message.Message;
 
 import java.nio.ByteBuffer;
 
@@ -56,16 +60,14 @@ import java.nio.ByteBuffer;
  *
  * @author hligaty
  */
-public interface AutoWriteCapableMessageHandler extends MessageHandler {
+public interface AutoSendCapableMessageHandler extends MessageHandler {
 
     /**
      * Auto write message.
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */
-    AbstractMessage doHandlesAndWrite(ByteBuffer byteBuffer);
-
-    //...
+    Message doHandleAndWrite(ByteBuffer byteBuffer);
 }
 ```
 
@@ -116,7 +118,7 @@ public class LoginMessageHandlerImpl extends AbstractLoginMessageHandler {
 
     @Override
     public Object login(ByteBuffer byteBuffer) {
-        Message message = new Message(MessageCode.LOGIN_RESP);
+        Message message = new ByteMessage(MessageCode.LOGIN_RESP);
         String id = new String(byteBuffer.array());
         Session session = Server.getCurrentSession();
         boolean hasLogin = false;
@@ -149,7 +151,7 @@ import AbstractLogoutMessageHandler;
 import Message;
 import Session;
 import io.github.hligaty.demo.MessageCode;
-import io.github.hligaty.util.Session;
+import io.github.hligaty.Session;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
@@ -168,7 +170,7 @@ public class LogoutMessageHandler extends AbstractLogoutMessageHandler {
     public void logout(ByteBuffer byteBuffer) {
         Session session = Server.getCurrentSession();
         log.info("{} logout", session.getId());
-        Message message = new Message(MessageCode.BROADCAST, ByteBuffer.wrap(session.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        Message message = new ByteMessage(MessageCode.BROADCAST, ByteBuffer.wrap(session.getId().toString().getBytes(StandardCharsets.UTF_8)));
         super.broadcast(message,
                 onlineSession -> !Objects.equals(session.getId(), onlineSession.getId()),
                 onlineSession -> {
@@ -244,3 +246,4 @@ Handle finished with exit code 0
 # 未来
 
 - 完善 readme
+- 添加 .option() 设置的可选参数，比如异步刷新 Socket 发送缓存区时间

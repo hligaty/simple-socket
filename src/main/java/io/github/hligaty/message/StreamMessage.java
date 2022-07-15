@@ -1,7 +1,5 @@
 package io.github.hligaty.message;
 
-import io.github.hligaty.util.StreamProvider;
-
 /**
  * @author hligaty
  */
@@ -9,8 +7,18 @@ public class StreamMessage extends Message {
     private final int streamSize;
     private final StreamProvider streamProvider;
 
-    public StreamMessage(int code, int streamSize, StreamProvider streamProvider) {
-        super(code);
+    public static StreamMessage async(int code, int streamSize, StreamProvider streamProvider) {
+        StreamMessage streamMessage = sync(code, streamSize, streamProvider);
+        streamMessage.setAsyncSend(true);
+        return streamMessage;
+    }
+
+    public static StreamMessage sync(int code, int streamSize, StreamProvider streamProvider) {
+        return new StreamMessage(code, streamSize, streamProvider);
+    }
+
+    protected StreamMessage(int code, int streamSize, StreamProvider streamProvider) {
+        super(false, code);
         this.streamSize = streamSize;
         this.streamProvider = streamProvider;
     }

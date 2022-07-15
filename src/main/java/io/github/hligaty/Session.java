@@ -1,4 +1,4 @@
-package io.github.hligaty.util;
+package io.github.hligaty;
 
 import io.github.hligaty.exception.ReceiveException;
 import io.github.hligaty.exception.SendException;
@@ -18,6 +18,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class Session implements Closeable {
     private final Socket socket;
+    private final int totalSendBufferSize;
+    private int usedSendBufferSize = 0;
     private final OutputStream outputStream;
     private final InputStream inputStream;
     private final ByteBuffer readBuffer = ByteBuffer.allocate(8);
@@ -46,6 +48,7 @@ public final class Session implements Closeable {
 
     public Session(Socket socket) throws IOException {
         this.socket = socket;
+        this.totalSendBufferSize = socket.getSendBufferSize();
         this.outputStream = new BufferedOutputStream(socket.getOutputStream());
         this.inputStream = new BufferedInputStream(socket.getInputStream());
     }
@@ -71,7 +74,7 @@ public final class Session implements Closeable {
             int size = readBuffer.getInt() - 4;
             int code = readBuffer.getInt();
             if (size <= 0) {
-                return new ByteMessage(code);
+                return ByteMessage.sync(code);
             }
             ByteBuffer tempBuffer = ByteBuffer.allocate(size);
             if ((total = inputStream.read(tempBuffer.array(), 0, size)) != size) {
@@ -80,7 +83,7 @@ public final class Session implements Closeable {
                 }
                 throw new ReceiveException("bad message format");
             }
-            return new ByteMessage(code, tempBuffer);
+            return ByteMessage.sync(code, tempBuffer);
         } catch (IOException e) {
             if (e instanceof ReceiveException) {
                 throw (ReceiveException) e;
@@ -92,20 +95,50 @@ public final class Session implements Closeable {
     public void send(Message message) throws SendException {
         writeLock.lock();
         try {
+            if (message != null) {
+                asyncSend(message);
+            }
+            outputStream.flush();
+        } catch (IOException e) {
+            if (e instanceof SendException) {
+                throw (SendException) e;
+            }
+            throw new SendException("I/O error", e, message);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    public void asyncSend(Message message) throws SendException {
+        writeLock.lock();
+        try {
+            int tempSendBufferSize = usedSendBufferSize;
             if (message instanceof StreamMessage) {
                 StreamMessage streamMessage = (StreamMessage) message;
+                ensureSendBufferSize(usedSendBufferSize + streamMessage.getStreamSize());
                 outputStream.write(buildTL(streamMessage).array());
                 streamMessage.getSender().send(outputStream);
             } else {
+                // only nio supports direct memory write
                 ByteMessage byteMessage = (ByteMessage) message;
+                ensureSendBufferSize(usedSendBufferSize + byteMessage.getByteBuffer().array().length);
                 outputStream.write(buildTL(byteMessage).array());
                 outputStream.write(byteMessage.getByteBuffer().array());
-                outputStream.flush();
             }
+            usedSendBufferSize = tempSendBufferSize;
         } catch (IOException e) {
             throw new SendException("I/O error", e, message);
         } finally {
             writeLock.unlock();
+        }
+    }
+
+    private void ensureSendBufferSize(int minSendBufferSize) throws IOException {
+        if (minSendBufferSize > totalSendBufferSize) {
+            outputStream.flush();
+            usedSendBufferSize = 0;
+        } else {
+            usedSendBufferSize = minSendBufferSize;
         }
     }
 
