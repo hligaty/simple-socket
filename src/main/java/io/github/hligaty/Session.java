@@ -95,30 +95,13 @@ public final class Session implements Closeable {
     public void send(Message message) throws SendException {
         writeLock.lock();
         try {
-            if (message != null) {
-                asyncSend(message);
-            }
-            outputStream.flush();
-        } catch (IOException e) {
-            if (e instanceof SendException) {
-                throw (SendException) e;
-            }
-            throw new SendException("I/O error", e, message);
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public void asyncSend(Message message) throws SendException {
-        writeLock.lock();
-        try {
             int tempSendBufferSize = usedSendBufferSize;
             if (message instanceof StreamMessage) {
                 StreamMessage streamMessage = (StreamMessage) message;
                 ensureSendBufferSize(usedSendBufferSize + streamMessage.getStreamSize());
                 outputStream.write(buildTL(streamMessage).array());
                 streamMessage.getSender().send(outputStream);
-            } else {
+            } else if (message instanceof ByteMessage) {
                 // only nio supports direct memory write
                 ByteMessage byteMessage = (ByteMessage) message;
                 ensureSendBufferSize(usedSendBufferSize + byteMessage.getByteBuffer().array().length);
@@ -126,6 +109,10 @@ public final class Session implements Closeable {
                 outputStream.write(byteMessage.getByteBuffer().array());
             }
             usedSendBufferSize = tempSendBufferSize;
+            if (!message.isAsyncSend()) {
+                outputStream.flush();
+                usedSendBufferSize = 0;
+            }
         } catch (IOException e) {
             throw new SendException("I/O error", e, message);
         } finally {

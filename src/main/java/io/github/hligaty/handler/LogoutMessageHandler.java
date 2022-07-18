@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
  *
  * @author hligaty
  */
-public abstract class AbstractLogoutMessageHandler extends BroadcastCapableMessageHandler {
+public abstract class LogoutMessageHandler extends BroadcastCapableMessageHandlerSupport implements MessageHandler {
 
     @Override
     public final void doHandle(ByteBuffer byteBuffer) {

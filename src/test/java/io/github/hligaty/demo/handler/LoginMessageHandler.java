@@ -1,9 +1,8 @@
 package io.github.hligaty.demo.handler;
 
 import io.github.hligaty.Server;
-import io.github.hligaty.cache.GroupCache;
+import io.github.hligaty.cache.Group;
 import io.github.hligaty.demo.MessageCode;
-import io.github.hligaty.handler.AbstractLoginMessageHandler;
 import io.github.hligaty.message.ByteMessage;
 import io.github.hligaty.Session;
 
@@ -16,7 +15,7 @@ import static io.github.hligaty.demo.BIOServerTest.GROUP_ONE;
 /**
  * 登录实现
  */
-public class LoginMessageHandler extends AbstractLoginMessageHandler {
+public class LoginMessageHandler extends io.github.hligaty.handler.LoginMessageHandler {
     private static final String ROOT = "root-";
 
     @Override
@@ -40,7 +39,7 @@ public class LoginMessageHandler extends AbstractLoginMessageHandler {
         try {
             session.send(message);
             if (Integer.parseInt(id.split("-")[1]) < 3) {
-                GroupCache.addGroup(GROUP_ONE, id);
+                Group.add(GROUP_ONE, id);
             }
         } catch (IOException e) {
             throw new RuntimeException("write error", e);

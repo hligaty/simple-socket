@@ -6,6 +6,7 @@ import io.github.hligaty.exception.SendException;
 import io.github.hligaty.exception.SimpleSocketIOException;
 import io.github.hligaty.handler.*;
 import io.github.hligaty.message.ByteMessage;
+import io.github.hligaty.util.EmptyObjects;
 import io.github.hligaty.util.NamedThreadFactory;
 import io.github.hligaty.util.ThreadPerTaskExecutor;
 
@@ -41,8 +42,8 @@ public class Server implements Closeable {
      */
     private final Executor workerGroup;
     private final RoutingMessageHandler delegateMessageHandler = new RoutingMessageHandler();
-    private AbstractLoginMessageHandler loginMessageHandler;
-    private AbstractLogoutMessageHandler logoutMessageHandler;
+    private LoginMessageHandler loginMessageHandler;
+    private LogoutMessageHandler logoutMessageHandler;
     private final Map<Object, WeakReference<Session>> onLineList = new ConcurrentHashMap<>();
 
     /**
@@ -118,7 +119,7 @@ public class Server implements Closeable {
                         .filter(Objects::nonNull)
                         .forEach(session -> {
                             try {
-                                session.send(null);
+                                session.send(EmptyObjects.EMPTY_MESSAGE);
                             } catch (SendException ignored) {
                             }
                         });
@@ -155,15 +156,15 @@ public class Server implements Closeable {
 
     private void prepareMessageHandler(MessageHandler messageHandler) {
         if (messageHandler instanceof SpecialMessageHandler) {
-            if (messageHandler instanceof BroadcastCapableMessageHandler) {
+            if (messageHandler instanceof BroadcastCapableMessageHandlerSupport) {
                 // Add online list for broadcast-capable message Handler
-                ((BroadcastCapableMessageHandler) messageHandler).setOnLineList(onLineList);
-                if (messageHandler instanceof AbstractLoginMessageHandler) {
+                ((BroadcastCapableMessageHandlerSupport) messageHandler).setOnLineList(onLineList);
+                if (messageHandler instanceof LoginMessageHandler) {
                     // Get the login message Handler
-                    loginMessageHandler = (AbstractLoginMessageHandler) messageHandler;
-                } else if (messageHandler instanceof AbstractLogoutMessageHandler) {
+                    loginMessageHandler = (LoginMessageHandler) messageHandler;
+                } else if (messageHandler instanceof LogoutMessageHandler) {
                     // Get the logout message Handler
-                    logoutMessageHandler = (AbstractLogoutMessageHandler) messageHandler;
+                    logoutMessageHandler = (LogoutMessageHandler) messageHandler;
                 }
             }
         }

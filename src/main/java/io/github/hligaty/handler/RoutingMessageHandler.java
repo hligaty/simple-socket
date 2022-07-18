@@ -6,26 +6,15 @@ import io.github.hligaty.message.ByteMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author hligaty
  */
-public final class RoutingMessageHandler implements MessageHandler {
+public final class RoutingMessageHandler {
     private final Logger log = LoggerFactory.getLogger(RoutingMessageHandler.class);
     private final Map<Integer, MessageHandler> messageHandlers = new HashMap<>();
-
-    @Override
-    public int bindCode() {
-        return -1;
-    }
-
-    @Override
-    public void doHandle(ByteBuffer byteBuffer) {
-        //
-    }
 
     public void handleMessage(ByteMessage message) {
         try {

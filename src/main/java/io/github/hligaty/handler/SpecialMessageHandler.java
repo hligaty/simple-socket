@@ -7,5 +7,5 @@ package io.github.hligaty.handler;
  *
  * @author hligaty
  */
-public interface SpecialMessageHandler extends MessageHandler {
+public interface SpecialMessageHandler {
 }
