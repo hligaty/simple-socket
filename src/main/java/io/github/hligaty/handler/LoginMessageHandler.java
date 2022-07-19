@@ -1,10 +1,9 @@
 package io.github.hligaty.handler;
 
 import io.github.hligaty.Server;
-import io.github.hligaty.exception.LoginException;
 import io.github.hligaty.Session;
+import io.github.hligaty.exception.LoginException;
 
-import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 
 /**
@@ -21,9 +20,8 @@ public abstract class LoginMessageHandler extends BroadcastCapableMessageHandler
             if ((id = login(byteBuffer)) != null) {
                 Session session = Server.getCurrentSession();
                 session.setId(id);
-                WeakReference<Session> reference = onLineList.put(id, new WeakReference<>(session));
-                Session prevSession;
-                if (reference != null && (prevSession = reference.get()) != null) {
+                Session prevSession = sessionFactory.putSession(session);
+                if (prevSession != null) {
                     prevSession.setId(null);
                 }
             }

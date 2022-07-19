@@ -1,11 +1,13 @@
 package io.github.hligaty.handler;
 
+import io.github.hligaty.Server;
 import io.github.hligaty.Session;
+import io.github.hligaty.SessionFactory;
 import io.github.hligaty.message.CallbackMessage;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -15,19 +17,18 @@ import java.util.stream.Stream;
  * @author hligaty
  */
 public abstract class BroadcastCapableMessageHandlerSupport extends MessageHandlerSupprot implements SpecialMessageHandler {
-    Map<Object, WeakReference<Session>> onLineList;
+    SessionFactory sessionFactory;
 
     public final Stream<Session> search(Predicate<Session> allowSend) {
-        return onLineList.values().stream()
-                .map(Reference::get)
-                .filter(session -> session != null && allowSend != null && allowSend.test(session));
+        Object id = Server.getCurrentSession().getId();
+        return sessionFactory.getAllSession()
+                .filter(session -> !id.equals(session))
+                .filter(session -> allowSend != null && allowSend.test(session));
     }
 
     public final Stream<Session> search(Collection<Object> idList) {
         return idList.stream()
-                .map(id -> onLineList.get(id))
-                .filter(Objects::nonNull)
-                .map(WeakReference::get)
+                .map(id -> sessionFactory.getSession(id))
                 .filter(Objects::nonNull);
     }
 
@@ -56,14 +57,10 @@ public abstract class BroadcastCapableMessageHandlerSupport extends MessageHandl
      * @return session
      */
     public final Optional<Session> getSession(Object id) {
-        WeakReference<Session> reference = onLineList.get(id);
-        return Optional.ofNullable(reference == null ? null : reference.get());
+        return Optional.ofNullable(sessionFactory.getSession(id));
     }
 
-    public final void setOnLineList(Map<Object, WeakReference<Session>> onLineList) {
-        if (this.onLineList != null) {
-            throw new IllegalArgumentException("onLineList not allow to set");
-        }
-        this.onLineList = onLineList;
+    public final void setSessionFactory(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 }

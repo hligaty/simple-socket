@@ -12,13 +12,9 @@ import io.github.hligaty.util.ThreadPerTaskExecutor;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
@@ -44,11 +40,13 @@ public class Server implements Closeable {
     private final RoutingMessageHandler delegateMessageHandler = new RoutingMessageHandler();
     private LoginMessageHandler loginMessageHandler;
     private LogoutMessageHandler logoutMessageHandler;
-    private final Map<Object, WeakReference<Session>> onLineList = new ConcurrentHashMap<>();
+    private final ServerConfig serverConfig = new ServerConfig();
+    private final SessionFactory sessionFactory = new SessionFactory();
+
 
     /**
-     * @param address bind address.
-     * @param timeout the specified timeout, in milliseconds.
+     * @param address  bind address.
+     * @param timeout  the specified timeout, in milliseconds.
      * @param nThreads accept thread size.
      * @throws IOException IO error when opening the socket.
      */
@@ -66,11 +64,28 @@ public class Server implements Closeable {
      * start server
      */
     public Server start() {
+        prepare();
+        doStart();
+        flushSendBuffer();
+        return this;
+    }
+
+    private void prepare() {
+        sessionFactory.setSendBufferSize(serverConfig.getOption(ServerOption.SNDBUF_SIZE));
+        //String packages = serverConfig.getOption(ServerOption.ANNOTATIONSCAN_PACKAGE);
+        //Reflections reflections = new Reflections(packages, Scanners.values());
+        //Set<Class<?>> controllerClasses = reflections.get(TypesAnnotated.with(Controller.class).asClass());
+        //for (Class<?> controllerClass : controllerClasses) {
+        //
+        //}
+    }
+
+    private void doStart() {
         for (; nThreads > 0; nThreads--) {
             bossGroup.execute(() -> {
                 while (isRunning()) {
                     try {
-                        Session session = new Session(serverSocket.accept());
+                        Session session = sessionFactory.createSession(serverSocket.accept());
                         workerGroup.execute(() -> handleMessage(session));
                     } catch (Exception ignored) {
                     }
@@ -78,8 +93,6 @@ public class Server implements Closeable {
                 runState.countDown();
             });
         }
-        flushSendBuffer();
-        return this;
     }
 
     /**
@@ -110,20 +123,17 @@ public class Server implements Closeable {
     }
 
     private void flushSendBuffer() {
+        int intervalTime = serverConfig.getOption(ServerOption.FLUSH_SNDBUF_INTERVAL);
         workerGroup.execute(() -> {
             while (isRunning()) {
                 long start = System.currentTimeMillis();
-                onLineList.values().stream()
-                        .filter(Objects::nonNull)
-                        .map(WeakReference::get)
-                        .filter(Objects::nonNull)
-                        .forEach(session -> {
-                            try {
-                                session.send(EmptyObjects.EMPTY_MESSAGE);
-                            } catch (SendException ignored) {
-                            }
-                        });
-                long sleepTime = start - System.currentTimeMillis() + 100;
+                sessionFactory.getAllSession().forEach(session -> {
+                    try {
+                        session.send(EmptyObjects.EMPTY_MESSAGE);
+                    } catch (SendException ignored) {
+                    }
+                });
+                long sleepTime = start - System.currentTimeMillis() + intervalTime;
                 try {
                     Thread.sleep(sleepTime > 0 ? sleepTime : 0);
                 } catch (InterruptedException ignored) {
@@ -158,7 +168,7 @@ public class Server implements Closeable {
         if (messageHandler instanceof SpecialMessageHandler) {
             if (messageHandler instanceof BroadcastCapableMessageHandlerSupport) {
                 // Add online list for broadcast-capable message Handler
-                ((BroadcastCapableMessageHandlerSupport) messageHandler).setOnLineList(onLineList);
+                ((BroadcastCapableMessageHandlerSupport) messageHandler).setSessionFactory(sessionFactory);
                 if (messageHandler instanceof LoginMessageHandler) {
                     // Get the login message Handler
                     loginMessageHandler = (LoginMessageHandler) messageHandler;
@@ -175,6 +185,11 @@ public class Server implements Closeable {
      */
     public static Session getCurrentSession() {
         return sessionThreadLocal.get();
+    }
+
+    public <T> Server option(ServerOption<T> option, T value) {
+        serverConfig.setOption(option, value);
+        return this;
     }
 
     @Override

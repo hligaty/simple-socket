@@ -1,11 +1,12 @@
 package io.github.hligaty.demo;
 
 import io.github.hligaty.Server;
+import io.github.hligaty.ServerOption;
+import io.github.hligaty.Session;
 import io.github.hligaty.demo.handler.HeartBeatMessageHandler;
 import io.github.hligaty.demo.handler.LoginMessageHandler;
 import io.github.hligaty.demo.handler.LogoutMessageHandler;
 import io.github.hligaty.message.ByteMessage;
-import io.github.hligaty.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -23,12 +24,13 @@ public class BIOServerTest {
 
     @Test
     public void test() throws IOException, InterruptedException {
-        System.out.println((2 >> 1) + 1);
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "16");
         try (Server server = new Server(new InetSocketAddress(19630), 1000 * 60, 1)
                 .registerMessageHandler(new LoginMessageHandler())
                 .registerMessageHandler(new LogoutMessageHandler())
                 .registerMessageHandlers(Collections.singletonList(new HeartBeatMessageHandler()))
+                .option(ServerOption.ANNOTATIONSCAN_PACKAGE, "io.github.hligaty")
+                .option(ServerOption.FLUSH_SNDBUF_INTERVAL, 0)
                 .start()) {
             // mock client
             IntStream.rangeClosed(1, 10).parallel().forEach(i -> {
