@@ -53,7 +53,7 @@ public class HeartBeatMessageHandler implements MessageHandler {
                 //message = buildMessage();
                 try {
                     for (int i1 = 0; i1 < 1000; i1++) {
-                        session.asyncSend(message);
+                        session.send(message);
                     }
                 } catch (SendException e) {
                     log.error("failed to send 10000 big msg", e);
