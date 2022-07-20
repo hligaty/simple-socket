@@ -12,17 +12,18 @@ import java.nio.ByteBuffer;
  *
  * @author hligaty
  */
-public interface AutoSendCapableMessageHandler extends MessageHandler {
+
+public abstract class AutoSendCapableMessageHandler implements MessageHandler {
 
     /**
      * Auto write message.
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */
-    Message doHandleAndWrite(ByteBuffer byteBuffer);
+    public abstract Message doHandleAndWrite(ByteBuffer byteBuffer);
 
     @Override
-    default void doHandle(ByteBuffer byteBuffer) {
+    public final void doHandle(ByteBuffer byteBuffer) {
         Message message = null;
         try {
             message = doHandleAndWrite(byteBuffer);

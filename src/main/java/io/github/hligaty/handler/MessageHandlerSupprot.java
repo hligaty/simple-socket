@@ -9,7 +9,7 @@ import io.github.hligaty.message.CallbackMessage;
  *
  * @author hligaty
  */
-public abstract class MessageHandlerSupprot {
+public class MessageHandlerSupprot {
     /**
      * Enhanced messaging.
      *

@@ -27,7 +27,7 @@ public class LogoutMessageHandler extends io.github.hligaty.handler.LogoutMessag
     public void logout(ByteBuffer byteBuffer) {
         Session currentSession = Server.getCurrentSession();
         log.info("{} logout", currentSession.getId());
-        Message syncMessage = ByteMessage.sync(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        Message syncMessage = ByteMessage.syncMessage(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
         super.broadcast(new CallbackMessage(syncMessage) {
             @Override
             public void writeCallback(Session session) {}
@@ -35,7 +35,7 @@ public class LogoutMessageHandler extends io.github.hligaty.handler.LogoutMessag
             @Override
             public void exceptionCallback(SendException e, Session session) {}
         }, session -> !currentSession.getId().equals(session.getId()));
-        Message asyncMessage = ByteMessage.async(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        Message asyncMessage = ByteMessage.asyncMessage(MessageCode.BROADCAST, ByteBuffer.wrap(currentSession.getId().toString().getBytes(StandardCharsets.UTF_8)));
         super.broadcast(new CallbackMessage(asyncMessage), Group.get(GROUP_ONE));
     }
 

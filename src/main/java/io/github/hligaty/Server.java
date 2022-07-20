@@ -1,11 +1,10 @@
 package io.github.hligaty;
 
-import io.github.hligaty.exception.AutoSendException;
-import io.github.hligaty.exception.LoginException;
-import io.github.hligaty.exception.SendException;
-import io.github.hligaty.exception.SimpleSocketIOException;
+import io.github.hligaty.annotation.SocketController;
+import io.github.hligaty.exception.*;
 import io.github.hligaty.handler.*;
 import io.github.hligaty.message.ByteMessage;
+import io.github.hligaty.util.ComponentScanUtils;
 import io.github.hligaty.util.EmptyObjects;
 import io.github.hligaty.util.NamedThreadFactory;
 import io.github.hligaty.util.ThreadPerTaskExecutor;
@@ -14,7 +13,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
@@ -72,13 +71,10 @@ public class Server implements Closeable {
 
     private void prepare() {
         sessionFactory.setSendBufferSize(serverConfig.getOption(ServerOption.SNDBUF_SIZE));
-        //String packages = serverConfig.getOption(ServerOption.ANNOTATIONSCAN_PACKAGE);
-        //Reflections reflections = new Reflections(packages, Scanners.values());
-        //Set<Class<?>> controllerClasses = reflections.get(TypesAnnotated.with(Controller.class).asClass());
-        //for (Class<?> controllerClass : controllerClasses) {
-        //
-        //}
+        Collection<MessageHandler> messageHandlers = ComponentScanUtils.annotationScan(serverConfig.getOption(ServerOption.ANNOTATIONSCAN_PACKAGE), sessionFactory);
+        registerMessageHandlers(messageHandlers);
     }
+
 
     private void doStart() {
         for (; nThreads > 0; nThreads--) {
@@ -147,7 +143,7 @@ public class Server implements Closeable {
      *
      * @param messageHandlers message Handler list
      */
-    public final Server registerMessageHandlers(List<MessageHandler> messageHandlers) {
+    public final Server registerMessageHandlers(Collection<MessageHandler> messageHandlers) {
         messageHandlers.forEach(this::registerMessageHandler);
         return this;
     }
@@ -165,18 +161,22 @@ public class Server implements Closeable {
     }
 
     private void prepareMessageHandler(MessageHandler messageHandler) {
-        if (messageHandler instanceof SpecialMessageHandler) {
-            if (messageHandler instanceof BroadcastCapableMessageHandlerSupport) {
-                // Add online list for broadcast-capable message Handler
-                ((BroadcastCapableMessageHandlerSupport) messageHandler).setSessionFactory(sessionFactory);
-                if (messageHandler instanceof LoginMessageHandler) {
-                    // Get the login message Handler
-                    loginMessageHandler = (LoginMessageHandler) messageHandler;
-                } else if (messageHandler instanceof LogoutMessageHandler) {
-                    // Get the logout message Handler
-                    logoutMessageHandler = (LogoutMessageHandler) messageHandler;
-                }
-            }
+        if (messageHandler.getClass().isAnnotationPresent(SocketController.class)) {
+            throw new SimpleSocketRuntimeException("@controller must not be callout on MessageHandler");
+        }
+        if (!(messageHandler instanceof SpecialMessageHandler)) {
+            return;
+        }
+        if (messageHandler instanceof BroadcastCapableMessageHandlerSupport) {
+            // Add online list for broadcast-capable message Handler
+            ((BroadcastCapableMessageHandlerSupport) messageHandler).setSessionFactory(sessionFactory);
+        }
+        if (messageHandler instanceof LoginMessageHandler) {
+            // Get the login message Handler
+            loginMessageHandler = (LoginMessageHandler) messageHandler;
+        } else if (messageHandler instanceof LogoutMessageHandler) {
+            // Get the logout message Handler
+            logoutMessageHandler = (LogoutMessageHandler) messageHandler;
         }
     }
 

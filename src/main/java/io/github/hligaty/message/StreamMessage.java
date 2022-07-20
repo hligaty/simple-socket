@@ -7,13 +7,13 @@ public class StreamMessage extends Message {
     private final int streamSize;
     private final StreamProvider streamProvider;
 
-    public static StreamMessage async(int code, int streamSize, StreamProvider streamProvider) {
-        StreamMessage streamMessage = sync(code, streamSize, streamProvider);
+    public static StreamMessage asyncMessage(int code, int streamSize, StreamProvider streamProvider) {
+        StreamMessage streamMessage = syncMessage(code, streamSize, streamProvider);
         streamMessage.setAsyncSend(true);
         return streamMessage;
     }
 
-    public static StreamMessage sync(int code, int streamSize, StreamProvider streamProvider) {
+    public static StreamMessage syncMessage(int code, int streamSize, StreamProvider streamProvider) {
         return new StreamMessage(code, streamSize, streamProvider);
     }
 

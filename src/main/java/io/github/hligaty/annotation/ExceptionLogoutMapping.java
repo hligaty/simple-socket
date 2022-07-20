@@ -5,5 +5,6 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Mapping {
+@SocketMapping(bindCode = -1)
+public @interface ExceptionLogoutMapping {
 }

@@ -10,7 +10,7 @@ public class CallbackMessage {
         this.internalMessage = internalMessage;
     }
 
-    public Message getInternalMessage() {
+    public final Message getInternalMessage() {
         return internalMessage;
     }
 

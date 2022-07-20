@@ -74,7 +74,7 @@ public final class Session implements Closeable {
             int size = readBuffer.getInt() - 4;
             int code = readBuffer.getInt();
             if (size <= 0) {
-                return ByteMessage.sync(code);
+                return ByteMessage.syncMessage(code);
             }
             ByteBuffer tempBuffer = ByteBuffer.allocate(size);
             if ((total = inputStream.read(tempBuffer.array(), 0, size)) != size) {
@@ -83,7 +83,7 @@ public final class Session implements Closeable {
                 }
                 throw new ReceiveException("bad message format");
             }
-            return ByteMessage.sync(code, tempBuffer);
+            return ByteMessage.syncMessage(code, tempBuffer);
         } catch (IOException e) {
             if (e instanceof ReceiveException) {
                 throw (ReceiveException) e;

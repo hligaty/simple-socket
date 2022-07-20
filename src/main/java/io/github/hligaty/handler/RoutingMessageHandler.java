@@ -2,6 +2,7 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
+import io.github.hligaty.exception.SimpleSocketRuntimeException;
 import io.github.hligaty.message.ByteMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ public final class RoutingMessageHandler {
     }
 
     public void addMessageHandler(MessageHandler messageHandler) {
-        messageHandlers.put(messageHandler.bindCode(), messageHandler);
+        if (messageHandlers.put(messageHandler.bindCode(), messageHandler) != null) {
+            throw new SimpleSocketRuntimeException("messageHandler must be unique. bindCode:'" + messageHandler.bindCode() + "'");
+        }
     }
 }

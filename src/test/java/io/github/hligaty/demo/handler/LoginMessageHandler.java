@@ -25,7 +25,7 @@ public class LoginMessageHandler extends io.github.hligaty.handler.LoginMessageH
 
     @Override
     public Object login(ByteBuffer byteBuffer) {
-        ByteMessage message = ByteMessage.sync(MessageCode.LOGIN_RESP);
+        ByteMessage message = ByteMessage.syncMessage(MessageCode.LOGIN_RESP);
         String id = new String(byteBuffer.array());
         Session session = Server.getCurrentSession();
         boolean hasLogin = false;

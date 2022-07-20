@@ -10,21 +10,21 @@ import java.nio.ByteBuffer;
 public class ByteMessage extends Message {
     private ByteBuffer byteBuffer;
 
-    public static ByteMessage async(int code) {
-        return async(code, null);
+    public static ByteMessage asyncMessage(int code) {
+        return asyncMessage(code, null);
     }
 
-    public static ByteMessage async(int code, ByteBuffer byteBuffer) {
-        ByteMessage streamMessage = sync(code, byteBuffer);
+    public static ByteMessage asyncMessage(int code, ByteBuffer byteBuffer) {
+        ByteMessage streamMessage = syncMessage(code, byteBuffer);
         streamMessage.setAsyncSend(true);
         return streamMessage;
     }
 
-    public static ByteMessage sync(int code) {
+    public static ByteMessage syncMessage(int code) {
         return new ByteMessage(code, null);
     }
 
-    public static ByteMessage sync(int code, ByteBuffer byteBuffer) {
+    public static ByteMessage syncMessage(int code, ByteBuffer byteBuffer) {
         return new ByteMessage(code, byteBuffer);
     }
 

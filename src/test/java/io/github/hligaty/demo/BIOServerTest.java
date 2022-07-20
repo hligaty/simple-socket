@@ -30,16 +30,16 @@ public class BIOServerTest {
                 .registerMessageHandler(new LogoutMessageHandler())
                 .registerMessageHandlers(Collections.singletonList(new HeartBeatMessageHandler()))
                 .option(ServerOption.ANNOTATIONSCAN_PACKAGE, "io.github.hligaty")
-                .option(ServerOption.FLUSH_SNDBUF_INTERVAL, 0)
+                .option(ServerOption.FLUSH_SNDBUF_INTERVAL, 100)
                 .start()) {
             // mock client
             IntStream.rangeClosed(1, 10).parallel().forEach(i -> {
                 try {
                     Session client = new Session(new Socket("localhost", 19630));
                     client.setId("root-" + i);
-                    client.send(ByteMessage.sync( MessageCode.LOGIN_REQ, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
+                    client.send(ByteMessage.syncMessage( MessageCode.LOGIN_REQ, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
                     ByteMessage message = client.receive();
-                    client.send(ByteMessage.sync(MessageCode.HEART_BEAT, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
+                    client.send(ByteMessage.syncMessage(MessageCode.HEART_BEAT, ByteBuffer.wrap(client.getId().toString().getBytes(StandardCharsets.UTF_8))));
                     for (int i1 = 0; i1 < 500000; i1++) {
                         ByteMessage receive = client.receive();
                     }
@@ -48,7 +48,7 @@ public class BIOServerTest {
                         message = client.receive();
                         log.info("{} get {} logout", client.getId(), new String(message.getByteBuffer().array()));
                     }
-                    client.send(ByteMessage.sync(MessageCode.LOGOUT_REQ));
+                    client.send(ByteMessage.syncMessage(MessageCode.LOGOUT_REQ));
                     // group_one(id < 3) get broadcast message
                     if (i < 3) {
                         message = client.receive();
