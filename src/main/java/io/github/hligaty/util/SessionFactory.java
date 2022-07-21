@@ -1,4 +1,6 @@
-package io.github.hligaty;
+package io.github.hligaty.util;
+
+import io.github.hligaty.Session;
 
 import java.io.IOException;
 import java.lang.ref.Reference;

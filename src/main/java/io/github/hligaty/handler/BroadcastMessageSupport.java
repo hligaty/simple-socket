@@ -2,7 +2,7 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.Server;
 import io.github.hligaty.Session;
-import io.github.hligaty.SessionFactory;
+import io.github.hligaty.util.SessionFactory;
 import io.github.hligaty.message.CallbackMessage;
 
 import java.util.Collection;

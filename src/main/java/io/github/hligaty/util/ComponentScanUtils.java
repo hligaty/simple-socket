@@ -1,6 +1,5 @@
 package io.github.hligaty.util;
 
-import io.github.hligaty.SessionFactory;
 import io.github.hligaty.annotation.*;
 import io.github.hligaty.exception.SimpleSocketRuntimeException;
 import io.github.hligaty.handler.BroadcastMessageSupport;
