@@ -16,9 +16,9 @@ public class ByteMessage extends Message {
         if (code >= 0 && code <= ByteMessageCache.length) {
             return ByteMessageCache.asyncCache[code];
         }
-        ByteMessage streamMessage = syncMessage(code, null);
-        streamMessage.setAsyncSend(true);
-        return streamMessage;
+        ByteMessage byteMessage = syncMessage(code, null);
+        byteMessage.setAsyncSend(true);
+        return byteMessage;
     }
 
     public static ByteMessage asyncMessage(int code, ByteBuffer byteBuffer) {
