@@ -1,8 +1,11 @@
 package io.github.hligaty.util;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.ThreadFactory;
 
 /**
+ * 可命名的线程工厂
+ *
  * @author hligaty
  */
 public final class NamedThreadFactory implements ThreadFactory {
@@ -13,7 +16,7 @@ public final class NamedThreadFactory implements ThreadFactory {
     }
 
     @Override
-    public Thread newThread(Runnable r) {
+    public Thread newThread(@Nonnull Runnable r) {
         return new Thread(r, threadNamePrefix);
     }
 }

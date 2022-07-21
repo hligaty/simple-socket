@@ -12,11 +12,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * Supports broadcast
+ * 广播支持类
  *
  * @author hligaty
  */
-public abstract class BroadcastCapableMessageHandlerSupport extends MessageHandlerSupprot implements SpecialMessageHandler {
+public class BroadcastMessageSupport extends MessageSupprot implements SpecialMessageHandler {
     SessionFactory sessionFactory;
 
     public final Stream<Session> search(Predicate<Session> allowSend) {

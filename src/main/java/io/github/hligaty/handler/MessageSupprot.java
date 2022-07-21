@@ -5,11 +5,11 @@ import io.github.hligaty.exception.SendException;
 import io.github.hligaty.message.CallbackMessage;
 
 /**
- * Provides Enhanced messaging, etc.
+ * 消息帮助类
  *
  * @author hligaty
  */
-public class MessageHandlerSupprot {
+public class MessageSupprot {
     /**
      * Enhanced messaging.
      *

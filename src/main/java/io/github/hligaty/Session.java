@@ -14,6 +14,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
+ * Socket 会话
+ *
  * @author hligaty
  */
 public final class Session implements Closeable {
@@ -27,7 +29,6 @@ public final class Session implements Closeable {
     private final ReentrantLock writeLock = new ReentrantLock();
     private Object id;
     private Object attachment;
-    private boolean logouted;
 
     public Object getId() {
         return id;
@@ -35,7 +36,6 @@ public final class Session implements Closeable {
 
     public void setId(Object id) {
         this.id = id;
-        logouted = id == null;
     }
 
     public Object getAttachment() {
@@ -135,10 +135,6 @@ public final class Session implements Closeable {
                 ((StreamMessage) message).getStreamSize() + 4 :
                 ((ByteMessage) message).getByteBuffer().array().length + 4);
         return writeBuffer.putInt(message.getCode());
-    }
-
-    public boolean isLogouted() {
-        return logouted;
     }
 
     @Override

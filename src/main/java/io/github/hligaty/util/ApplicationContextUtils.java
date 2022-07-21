@@ -6,6 +6,12 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+
+/**
+ * Spring 容器工具类，Class.forName("org.springframework.context.ApplicationContext") 存在后再调用
+ *
+ * @author hligaty
+ */
 @Component
 public class ApplicationContextUtils implements ApplicationContextAware {
     private static ApplicationContext applicationContext;

@@ -5,7 +5,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * Get the member list of the group, which is used to facilitate the broadcast of messages
+ * 简单的线程安全的分组缓存
+ *
+ * @author hligaty
  */
 public final class Group {
     private static final Map<Object, Set<Object>> GROUPS = new ConcurrentHashMap<>();

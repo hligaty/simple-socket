@@ -2,8 +2,8 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.exception.AutoSendException;
 import io.github.hligaty.exception.LoginException;
-import io.github.hligaty.exception.SimpleSocketRuntimeException;
 import io.github.hligaty.message.ByteMessage;
+import io.github.hligaty.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 消息处理器委托类
+ *
  * @author hligaty
  */
 public final class RoutingMessageHandler {
@@ -24,6 +26,7 @@ public final class RoutingMessageHandler {
             if (e instanceof LoginException || e instanceof AutoSendException) {
                 throw e;
             }
+            // 用户异常，只打印不断连
             log.error("Message handleing failed, nested exception is {}: {}, with root cause",
                     e.getClass().getName(),
                     e.getMessage(),
@@ -32,8 +35,6 @@ public final class RoutingMessageHandler {
     }
 
     public void addMessageHandler(MessageHandler messageHandler) {
-        if (messageHandlers.put(messageHandler.bindCode(), messageHandler) != null) {
-            throw new SimpleSocketRuntimeException("messageHandler must be unique. bindCode:'" + messageHandler.bindCode() + "'");
-        }
+        Assert.notNull(messageHandlers.put(messageHandler.bindCode(), messageHandler), "messageHandler must be unique. bindCode:'" + messageHandler.bindCode() + "'");
     }
 }

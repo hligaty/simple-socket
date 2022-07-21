@@ -25,10 +25,12 @@ public class BIOServerTest {
     @Test
     public void test() throws IOException, InterruptedException {
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "16");
-        try (Server server = new Server(new InetSocketAddress(19630), 1000 * 60, 1)
+        try (Server server = new Server(new InetSocketAddress(19630))
                 .registerMessageHandler(new LoginMessageHandler())
                 .registerMessageHandler(new LogoutMessageHandler())
                 .registerMessageHandlers(Collections.singletonList(new HeartBeatMessageHandler()))
+                .option(ServerOption.TIMEOUT, 1000 * 60)
+                .option(ServerOption.BOSS_THREAD_NUMBER, 1)
                 .option(ServerOption.ANNOTATIONSCAN_PACKAGE, "io.github.hligaty")
                 .option(ServerOption.FLUSH_SNDBUF_INTERVAL, 100)
                 .start()) {

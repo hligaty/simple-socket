@@ -3,22 +3,22 @@ package io.github.hligaty.handler;
 import java.nio.ByteBuffer;
 
 /**
- * message Handler
+ * 消息处理器
  *
  * @author hligaty
  */
 public interface MessageHandler {
     /**
-     * Bind the message code that this message handler can handle, cannot be repeated
+     * 绑定这个消息处理器能处理的消息码
      *
      * @return message code
      */
     int bindCode();
 
     /**
-     * The message handling is implemented here, and the message body needs to be parsed by you
+     * 实现消息处理
      *
-     * @param byteBuffer message body
+     * @param byteBuffer 收到的消息内容
      */
     void doHandle(ByteBuffer byteBuffer);
 }

@@ -7,11 +7,11 @@ import io.github.hligaty.exception.LoginException;
 import java.nio.ByteBuffer;
 
 /**
- * Abstract login message Handler
+ * 登入处理器
  *
  * @author hligaty
  */
-public abstract class LoginMessageHandler extends BroadcastCapableMessageHandlerSupport implements MessageHandler {
+public abstract class LoginMessageHandler extends BroadcastMessageSupport implements MessageHandler {
 
     @Override
     public final void doHandle(ByteBuffer byteBuffer) {
@@ -33,7 +33,7 @@ public abstract class LoginMessageHandler extends BroadcastCapableMessageHandler
     }
 
     /**
-     * login
+     * 登入，必须返回 id
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */

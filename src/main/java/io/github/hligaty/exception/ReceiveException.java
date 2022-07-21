@@ -1,6 +1,8 @@
 package io.github.hligaty.exception;
 
 /**
+ * 接收消息异常
+ *
  * @author hligaty
  */
 public class ReceiveException extends SimpleSocketIOException {

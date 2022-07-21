@@ -1,9 +1,7 @@
 package io.github.hligaty.handler;
 
 /**
- * This interface is a special purpose interface, mainly for internal use within the framework.
- * In general, application-provided message-Handlers should simply implement the plain MessageHandler(or AutoWriteCapableMessageHandler) interface
- * or derive from the AbstractMessageHandler(or BroadcastCapableMessageHandler) class.
+ * 标记为特殊的消息处理器，需要内部二次加工
  *
  * @author hligaty
  */

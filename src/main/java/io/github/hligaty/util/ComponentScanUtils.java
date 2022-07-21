@@ -3,11 +3,8 @@ package io.github.hligaty.util;
 import io.github.hligaty.SessionFactory;
 import io.github.hligaty.annotation.*;
 import io.github.hligaty.exception.SimpleSocketRuntimeException;
-import io.github.hligaty.handler.BroadcastCapableMessageHandlerSupport;
+import io.github.hligaty.handler.BroadcastMessageSupport;
 import io.github.hligaty.handler.MessageHandler;
-import io.github.hligaty.handler.MessageHandlerSupprot;
-import io.github.hligaty.message.CallbackMessage;
-import io.github.hligaty.message.Message;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,8 +20,24 @@ import java.util.stream.Collectors;
 import static org.reflections.scanners.Scanners.MethodsAnnotated;
 import static org.reflections.scanners.Scanners.TypesAnnotated;
 
+/**
+ * 注解扫描工具类
+ *
+ * @author hligaty
+ */
 public class ComponentScanUtils {
 
+    /**
+     * 获取所有可用的消息处理器
+     * 1 是 SpringBoot 环境，获取所有已经添加到容器的 MessageHandler
+     * 2 为所有注解实现的消息处理器生成相应的实现类
+     * 2.1 是 SpringBoot 环境，生成的 MessageHandler 处理时调用 SpringBean 的方法
+     * 2.2 不是 SpringBoot 环境，调用默认的无参构造方法实例化对象，生成的 MessageHandler处理时调用实例化对象的方法
+     *
+     * @param packages       扫描的包路径
+     * @param sessionFactory session 工厂
+     * @return 扫描到的消息处理器
+     */
     public static Collection<MessageHandler> annotationScan(String packages, SessionFactory sessionFactory) {
         List<MessageHandler> messageHandlers = new ArrayList<>();
         boolean isSpring = false;
@@ -57,7 +70,6 @@ public class ComponentScanUtils {
         // 添加到对应的 @SocketController 中，类似 SpringBoot 的 @ConfigurationClass，然后再解析
         reflections.get(MethodsAnnotated.with(SocketMapping.class).as(Method.class))
                 .forEach(method -> controllerClasses.get(method.getDeclaringClass()).add(method));
-        MessageHandlerSupprot messageHandlerSupprot = new MessageHandlerSupprot();
         // 处理每个 @SocketController 类
         for (Map.Entry<? extends Class<?>, ArrayList<Method>> entry : controllerClasses.entrySet()) {
             Class<?> controllerClass = entry.getKey();
@@ -69,10 +81,10 @@ public class ComponentScanUtils {
             } catch (InstantiationException | IllegalAccessException e) {
                 throw new SimpleSocketRuntimeException("failed to create instance");
             }
-            if (controller.getClass().isAssignableFrom(BroadcastCapableMessageHandlerSupport.class) ||
-                    (isSpring && ClassUtils.isAssignableValue(BroadcastCapableMessageHandlerSupport.class, controller))) {
+            if (controller.getClass().isAssignableFrom(BroadcastMessageSupport.class) ||
+                    (isSpring && ClassUtils.isAssignableValue(BroadcastMessageSupport.class, controller))) {
                 // 为具有广播能力的类注入广播能力需要的 SessionFactory
-                ((BroadcastCapableMessageHandlerSupport) controller).setSessionFactory(sessionFactory);
+                ((BroadcastMessageSupport) controller).setSessionFactory(sessionFactory);
             }
             // 登出和异常登出必须在一个 @SocketController 类中，否则异常登出失效，通常这两个方法会有公用实现，也在一个类中
             int logoutCode = -1;
@@ -80,26 +92,18 @@ public class ComponentScanUtils {
             Method exceptionLogoutMethod = null;
             for (Method method : entry.getValue()) {
                 // 为每个 @SocketMapping 生成 MessageHandler
-                // TODO: 2022/7/20 还需要匹配方法参数，一般都要接收 ByteBuffer，但有的消息不需要，还需要适配
                 SocketMapping socketMapping = method.getAnnotation(SocketMapping.class);
                 int code = socketMapping.bindCode();
-                Class<?> returnType = method.getReturnType();
                 MessageHandler messageHandler = null;
                 if (socketMapping instanceof LoginMapping) {
-                    messageHandler = MessageHandlerUtils.buildLoginMessageHandler(controller, code, method);
+                    messageHandler = MessageHandlerFactory.getLoginMessageHandler(code, method, controller);
                 } else if (socketMapping instanceof LogoutMapping) {
                     logoutCode = code;
                     logoutMethod = method;
                 } else if (socketMapping instanceof ExceptionLogoutMapping) {
                     exceptionLogoutMethod = method;
                 } else {
-                    if (returnType.isAssignableFrom(Message.class)) {
-                        messageHandler = MessageHandlerUtils.buildAutoSendCapableMessageHandler(controller, code, method);
-                    } else if (returnType.isAssignableFrom(CallbackMessage.class)) {
-                        messageHandler = MessageHandlerUtils.buildCallbackMessageHandler(controller, code, method, messageHandlerSupprot);
-                    } else if ("void".equals(returnType.getName())) {
-                        messageHandler = MessageHandlerUtils.buildMessageHandler(controller, code, method);
-                    }
+                    messageHandler = MessageHandlerFactory.getMessageHandler(code, method, controller);
                 }
                 if (messageHandler != null) {
                     messageHandlers.add(messageHandler);
@@ -107,7 +111,7 @@ public class ComponentScanUtils {
             }
             if (logoutCode != -1) {
                 // 生成登出消息处理
-                messageHandlers.add(MessageHandlerUtils.buildLogoutMessageHandler(controller, logoutCode, logoutMethod, exceptionLogoutMethod));
+                messageHandlers.add(MessageHandlerFactory.getLogoutMessageHandler(logoutCode, logoutMethod, exceptionLogoutMethod, controller));
             }
         }
         return messageHandlers;

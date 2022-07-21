@@ -9,6 +9,11 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+/**
+ * Session 工厂，负责创建/获取连接
+ *
+ * @author hligaty
+ */
 public class SessionFactory {
     private int sendBufferSize;
     private final Map<Object, WeakReference<Session>> onLineList = new ConcurrentHashMap<>();

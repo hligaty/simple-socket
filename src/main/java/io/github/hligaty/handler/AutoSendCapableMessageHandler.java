@@ -8,11 +8,10 @@ import io.github.hligaty.message.Message;
 import java.nio.ByteBuffer;
 
 /**
- * Supports AutoWrite
+ * 自动发送回复消息的消息处理器
  *
  * @author hligaty
  */
-
 public abstract class AutoSendCapableMessageHandler implements MessageHandler {
 
     /**

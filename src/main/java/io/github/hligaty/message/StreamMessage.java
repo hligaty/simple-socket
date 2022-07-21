@@ -1,6 +1,8 @@
 package io.github.hligaty.message;
 
 /**
+ * 流消息，推荐使用
+ *
  * @author hligaty
  */
 public class StreamMessage extends Message {

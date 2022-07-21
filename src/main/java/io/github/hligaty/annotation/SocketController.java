@@ -5,6 +5,10 @@ import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
 
+/**
+ * 标记类被扫描，就像 SpringMVC 的 @Controller 一样
+ * @author hligaty
+ */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
