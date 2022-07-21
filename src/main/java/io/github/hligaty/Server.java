@@ -151,14 +151,12 @@ public class Server implements Closeable {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                if (isRunning()) {
-                    sessionFactory.getAllSession().forEach(session -> {
-                        try {
-                            session.send(EmptyObjects.EMPTY_MESSAGE);
-                        } catch (SendException ignored) {
-                        }
-                    });
-                }
+                sessionFactory.getAllSession().forEach(session -> {
+                    try {
+                        session.send(EmptyObjects.EMPTY_MESSAGE);
+                    } catch (SendException ignored) {
+                    }
+                });
             }
         };
         flushSendBufferTimer = new Timer("flush-send-buffer");
@@ -217,8 +215,8 @@ public class Server implements Closeable {
      * 设置服务器参数
      *
      * @param option 参数选项
-     * @param value 参数值
-     * @param <T> 参数类型
+     * @param value  参数值
+     * @param <T>    参数类型
      * @return 被设置的服务器
      */
     public <T> Server option(ServerOption<T> option, T value) {

@@ -139,9 +139,13 @@ public final class Session implements Closeable {
 
     @Override
     public void close() {
+        writeLock.lock();
         try {
+            outputStream.flush();
             socket.close();
         } catch (IOException ignored) {
+        } finally {
+            writeLock.unlock();
         }
     }
 }
