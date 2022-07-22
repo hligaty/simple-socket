@@ -77,8 +77,8 @@ public class ComponentScanUtils {
                 controller = isSpring ?
                         ApplicationContextUtils.getBean(controllerClass) :
                         controllerClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new SimpleSocketRuntimeException("failed to create instance");
+            } catch (InstantiationException | IllegalAccessException | RuntimeException e) {
+                throw new SimpleSocketRuntimeException("failed to get instance");
             }
             if (controller.getClass().isAssignableFrom(BroadcastMessageSupport.class) ||
                     (isSpring && ClassUtils.isAssignableValue(BroadcastMessageSupport.class, controller))) {
