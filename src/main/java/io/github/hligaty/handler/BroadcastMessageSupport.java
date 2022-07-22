@@ -7,7 +7,6 @@ import io.github.hligaty.util.SessionFactory;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -49,8 +48,8 @@ public class BroadcastMessageSupport extends MessageSupprot implements SpecialMe
      * @param id id
      * @return session
      */
-    public final Optional<Session> getSession(Object id) {
-        return Optional.ofNullable(sessionFactory.getSession(id));
+    public final Session getSession(Object id) {
+        return sessionFactory.getSession(id);
     }
 
     public final void setSessionFactory(SessionFactory sessionFactory) {
