@@ -169,10 +169,10 @@ public class LogoutMessageHandler extends AbstractLogoutMessageHandler {
     @Override
     public void logout(ByteBuffer byteBuffer) {
         Session session = Server.getCurrentSession();
-        log.info("{} logout", session.getId());
-        Message message = new ByteMessage(MessageCode.BROADCAST, ByteBuffer.wrap(session.getId().toString().getBytes(StandardCharsets.UTF_8)));
+        log.info("{} logout", session.getUserId());
+        Message message = new ByteMessage(MessageCode.BROADCAST, ByteBuffer.wrap(session.getUserId().toString().getBytes(StandardCharsets.UTF_8)));
         super.broadcast(message,
-                onlineSession -> !Objects.equals(session.getId(), onlineSession.getId()),
+                onlineSession -> !Objects.equals(session.getUserId(), onlineSession.getId()),
                 onlineSession -> {
                 },
                 (e, onlineSession) -> {
@@ -181,7 +181,7 @@ public class LogoutMessageHandler extends AbstractLogoutMessageHandler {
 
     @Override
     public void exceptionLogout(Exception e, Message message) {
-        log.info("{}: exception logout", Server.getCurrentSession().getId());
+        log.info("{}: exception logout", Server.getCurrentSession().getUserId());
     }
 }
 ```

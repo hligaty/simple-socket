@@ -134,7 +134,7 @@ public class Server implements Closeable {
         try {
             session.setTimeout(serverConfig.getOption(ServerOption.TIMEOUT));
             // 是登入消息或者已经登入了
-            while (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getId() != null) {
+            while (loginMessageHandler.bindCode() == (message = session.receive()).getCode() || session.getUserId() != null) {
                 delegateMessageHandler.handleMessage(message);
             }
         } catch (SimpleSocketIOException | AutoSendException e) {

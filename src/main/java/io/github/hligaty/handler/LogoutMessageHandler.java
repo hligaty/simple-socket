@@ -22,14 +22,14 @@ public abstract class LogoutMessageHandler extends BroadcastMessageSupport imple
             throw new LoginException();
         } finally {
             Session session = Server.getCurrentSession();
-            sessionFactory.removeSession(session.getId(), session);
-            session.setId(null);
+            sessionFactory.removeSession(session.getUserId(), session);
+            session.setUserId(null);
         }
         throw new LoginException();
     }
 
     public final void exceptionCaught(Exception e, Message message) {
-        if (Server.getCurrentSession().getId() != null) {
+        if (Server.getCurrentSession().getUserId() != null) {
             exceptionLogout(e, message);
         }
     }

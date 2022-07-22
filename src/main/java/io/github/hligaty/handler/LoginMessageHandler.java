@@ -15,11 +15,11 @@ public abstract class LoginMessageHandler extends BroadcastMessageSupport implem
 
     @Override
     public final void doHandle(ByteBuffer byteBuffer) {
-        Object id;
+        Object userId;
         try {
-            if ((id = login(byteBuffer)) != null) {
+            if ((userId = login(byteBuffer)) != null) {
                 Session session = Server.getCurrentSession();
-                session.setId(id);
+                session.setUserId(userId);
                 sessionFactory.putSession(session);
             }
         } catch (LoginException e) {
@@ -30,7 +30,7 @@ public abstract class LoginMessageHandler extends BroadcastMessageSupport implem
     }
 
     /**
-     * 登入，必须返回 id
+     * 登入，必须返回用户对应的 id
      *
      * @see MessageHandler#doHandle(ByteBuffer)
      */

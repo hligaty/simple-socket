@@ -27,15 +27,15 @@ public final class Session implements Closeable {
     private final ByteBuffer readBuffer = ByteBuffer.allocate(8);
     private final ByteBuffer writeBuffer = ByteBuffer.allocate(8);
     private final ReentrantLock writeLock = new ReentrantLock();
-    private Object id;
+    private Object userId;
     private Object attachment;
 
-    public Object getId() {
-        return id;
+    public Object getUserId() {
+        return userId;
     }
 
-    public void setId(Object id) {
-        this.id = id;
+    public void setUserId(Object userId) {
+        this.userId = userId;
     }
 
     public Object getAttachment() {

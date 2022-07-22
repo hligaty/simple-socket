@@ -35,13 +35,13 @@ public class SessionFactory {
     }
 
     public void putSession(Session session) {
-        Session prevSession = onLineList.put(session.getId(), session);
+        Session prevSession = onLineList.put(session.getUserId(), session);
         if (prevSession != null) {
             prevSession.close();
         }
     }
 
-    public void removeSession(Object id, Session session) {
-        onLineList.remove(id, session);
+    public void removeSession(Object userId, Session session) {
+        onLineList.remove(userId, session);
     }
 }

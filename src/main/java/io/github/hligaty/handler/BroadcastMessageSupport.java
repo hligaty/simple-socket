@@ -23,9 +23,9 @@ public class BroadcastMessageSupport extends MessageSupprot implements SpecialMe
      * @param allowSend write if true
      */
     public final void broadcast(CallbackMessage message, Predicate<Session> allowSend) {
-        Object id = Server.getCurrentSession().getId();
+        Object userId = Server.getCurrentSession().getUserId();
         sessionFactory.getAllSession().forEach(session -> {
-            if (!Objects.equals(id, session.getId()) && allowSend != null && allowSend.test(session)) {
+            if (!Objects.equals(userId, session.getUserId()) && allowSend != null && allowSend.test(session)) {
                 send(message, session);
             }
         });
@@ -34,22 +34,22 @@ public class BroadcastMessageSupport extends MessageSupprot implements SpecialMe
     /**
      * Broadcast message by list
      *
-     * @param idList connections that need to be broadcast
+     * @param userIdList connections that need to be broadcast
      */
-    public final void broadcast(CallbackMessage message, Collection<Object> idList) {
-        for (Object id : idList) {
-            send(message, sessionFactory.getSession(id));
+    public final void broadcast(CallbackMessage message, Collection<Object> userIdList) {
+        for (Object userId : userIdList) {
+            send(message, sessionFactory.getSession(userId));
         }
     }
 
     /**
-     * get session by id
+     * get session by userId
      *
-     * @param id id
+     * @param userId userId
      * @return session
      */
-    public final Session getSession(Object id) {
-        return sessionFactory.getSession(id);
+    public final Session getSession(Object userId) {
+        return sessionFactory.getSession(userId);
     }
 
     public final void setSessionFactory(SessionFactory sessionFactory) {
