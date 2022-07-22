@@ -2,14 +2,13 @@ package io.github.hligaty.handler;
 
 import io.github.hligaty.Server;
 import io.github.hligaty.Session;
-import io.github.hligaty.util.SessionFactory;
 import io.github.hligaty.message.CallbackMessage;
+import io.github.hligaty.util.SessionFactory;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * 广播支持类
@@ -19,26 +18,18 @@ import java.util.stream.Stream;
 public class BroadcastMessageSupport extends MessageSupprot implements SpecialMessageHandler {
     SessionFactory sessionFactory;
 
-    public final Stream<Session> search(Predicate<Session> allowSend) {
-        Object id = Server.getCurrentSession().getId();
-        return sessionFactory.getAllSession()
-                .filter(session -> !id.equals(session))
-                .filter(session -> allowSend != null && allowSend.test(session));
-    }
-
-    public final Stream<Session> search(Collection<Object> idList) {
-        return idList.stream()
-                .map(id -> sessionFactory.getSession(id))
-                .filter(Objects::nonNull);
-    }
-
     /**
      * Broadcast message by filter
      *
      * @param allowSend write if true
      */
     public final void broadcast(CallbackMessage message, Predicate<Session> allowSend) {
-        search(allowSend).forEach(session -> send(message, session));
+        Object id = Server.getCurrentSession().getId();
+        sessionFactory.getAllSession().forEach(session -> {
+            if (!Objects.equals(id, session.getId()) && allowSend != null && allowSend.test(session)) {
+                send(message, session);
+            }
+        });
     }
 
     /**
@@ -47,7 +38,9 @@ public class BroadcastMessageSupport extends MessageSupprot implements SpecialMe
      * @param idList connections that need to be broadcast
      */
     public final void broadcast(CallbackMessage message, Collection<Object> idList) {
-        search(idList).forEach(session -> send(message, session));
+        for (Object id : idList) {
+            send(message, sessionFactory.getSession(id));
+        }
     }
 
     /**

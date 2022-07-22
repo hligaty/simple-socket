@@ -20,10 +20,7 @@ public abstract class LoginMessageHandler extends BroadcastMessageSupport implem
             if ((id = login(byteBuffer)) != null) {
                 Session session = Server.getCurrentSession();
                 session.setId(id);
-                Session prevSession = sessionFactory.putSession(session);
-                if (prevSession != null) {
-                    prevSession.setId(null);
-                }
+                sessionFactory.putSession(session);
             }
         } catch (LoginException e) {
             throw e;

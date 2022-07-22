@@ -1,6 +1,7 @@
 package io.github.hligaty.handler;
 
 import io.github.hligaty.Server;
+import io.github.hligaty.Session;
 import io.github.hligaty.exception.LoginException;
 import io.github.hligaty.message.Message;
 
@@ -20,7 +21,9 @@ public abstract class LogoutMessageHandler extends BroadcastMessageSupport imple
         } catch (RuntimeException e) {
             throw new LoginException();
         } finally {
-            Server.getCurrentSession().setId(null);
+            Session session = Server.getCurrentSession();
+            sessionFactory.removeSession(session.getId(), session);
+            session.setId(null);
         }
         throw new LoginException();
     }

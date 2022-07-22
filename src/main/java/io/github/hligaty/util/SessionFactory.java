@@ -3,13 +3,10 @@ package io.github.hligaty.util;
 import io.github.hligaty.Session;
 
 import java.io.IOException;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 /**
  * Session 工厂，负责创建/获取连接
@@ -18,7 +15,7 @@ import java.util.stream.Stream;
  */
 public class SessionFactory {
     private int sendBufferSize;
-    private final Map<Object, WeakReference<Session>> onLineList = new ConcurrentHashMap<>();
+    private final Map<Object, Session> onLineList = new ConcurrentHashMap<>();
 
     public void setSendBufferSize(int sendBufferSize) {
         this.sendBufferSize = sendBufferSize;
@@ -30,23 +27,21 @@ public class SessionFactory {
     }
 
     public Session getSession(Object id) {
-        WeakReference<Session> reference = onLineList.get(id);
-        return reference == null ? null : reference.get();
+        return onLineList.get(id);
     }
 
-    public Stream<Session> getAllSession() {
-        return onLineList.values().stream()
-                .filter(Objects::nonNull)
-                .map(Reference::get)
-                .filter(Objects::nonNull);
+    public Collection<Session> getAllSession() {
+        return onLineList.values();
     }
 
-    public Session putSession(Session session) {
-        WeakReference<Session> reference = onLineList.put(session.getId(), new WeakReference<>(session));
-        Session prevSession;
-        if (reference != null && (prevSession = reference.get()) != null) {
-            return prevSession;
+    public void putSession(Session session) {
+        Session prevSession = onLineList.put(session.getId(), session);
+        if (prevSession != null) {
+            prevSession.close();
         }
-        return null;
+    }
+
+    public void removeSession(Object id, Session session) {
+        onLineList.remove(id, session);
     }
 }
